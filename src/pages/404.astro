@@ -1,0 +1,210 @@
+---
+import { getDefaultProject } from '../config';
+
+const project = getDefaultProject();
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <title>404 - 页面未找到</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: '#f0f4ff',
+                100: '#e0e9ff',
+                500: '#4f6ef7',
+                600: '#3b5de7',
+                700: '#2c4bd6',
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      html.dark body { background: #111827; color: #e5e7eb; }
+      html.dark .text-gray-900 { color: #f3f4f6 !important; }
+      html.dark .text-gray-500 { color: #9ca3af !important; }
+      html.dark .text-gray-700 { color: #d1d5db !important; }
+      html.dark .text-gray-600 { color: #9ca3af !important; }
+      html.dark .text-gray-400 { color: #9ca3af !important; }
+      html.dark .border-gray-200 { border-color: #374151 !important; }
+      html.dark .bg-gray-100 { background-color: #374151 !important; }
+      html.dark .bg-white { background-color: #111827 !important; }
+      html.dark header { background-color: #1f2937 !important; }
+      html.dark .bg-brand-100 { background-color: #312e81 !important; }
+      html.dark .bg-brand-600 { background-color: #6366f1 !important; }
+      html.dark a.bg-brand-600,
+      html.dark button.bg-brand-600 { color: #ffffff !important; }
+      html.dark .hover\:bg-gray-200:hover { background-color: #4b5563 !important; }
+      html.dark .hover\:bg-brand-700:hover { background-color: #818cf8 !important; }
+      html.dark .hover\:border-gray-300:hover { border-color: #6b7280 !important; }
+      html.dark .hover\:border-gray-600:hover { border-color: #9ca3af !important; }
+      html.dark .hover\:shadow-md:hover { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
+      html.dark .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0,0,0,0.3); }
+      html.dark .from-blue-50 { --tw-gradient-from: #172554; }
+      html.dark .to-indigo-100 { --tw-gradient-to: #312e81; }
+      html.dark .from-blue-100 { --tw-gradient-from: #1e3a8a; }
+      html.dark .to-indigo-200 { --tw-gradient-to: #3730a3; }
+      html.dark .hover\:from-blue-100:hover { --tw-gradient-from: #1e3a8a; }
+      html.dark .hover\:to-indigo-200:hover { --tw-gradient-to: #3730a3; }
+      html.dark .from-emerald-50 { --tw-gradient-from: #022c22; }
+      html.dark .to-teal-100 { --tw-gradient-to: #134e4a; }
+      html.dark .hover\:from-emerald-100:hover { --tw-gradient-from: #064e3b; }
+      html.dark .hover\:to-teal-200:hover { --tw-gradient-to: #115e59; }
+      html.dark .from-violet-50 { --tw-gradient-from: #4c1d95; }
+      html.dark .to-purple-100 { --tw-gradient-to: #581c87; }
+      html.dark .hover\:from-violet-100:hover { --tw-gradient-from: #5b21b6; }
+      html.dark .hover\:to-purple-200:hover { --tw-gradient-to: #6b21a8; }
+      html.dark .from-slate-50 { --tw-gradient-from: #0f172a; }
+      html.dark .to-zinc-100 { --tw-gradient-to: #18181b; }
+      html.dark .hover\:from-slate-100:hover { --tw-gradient-from: #1e293b; }
+      html.dark .hover\:to-zinc-200:hover { --tw-gradient-to: #27272a; }
+      html.dark .border-blue-200 { border-color: #1e40af !important; }
+      html.dark .hover\:border-blue-300:hover { border-color: #3b82f6 !important; }
+      html.dark .border-emerald-200 { border-color: #065f46 !important; }
+      html.dark .hover\:border-emerald-300:hover { border-color: #10b981 !important; }
+      html.dark .border-violet-200 { border-color: #6d28d9 !important; }
+      html.dark .hover\:border-violet-300:hover { border-color: #8b5cf6 !important; }
+      html.dark .border-slate-200 { border-color: #334155 !important; }
+      html.dark .hover\:border-slate-300:hover { border-color: #64748b !important; }
+    </style>
+    <script>
+      (function() {
+        var saved = localStorage.getItem('theme');
+        if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+  </head>
+  <body class="bg-white text-gray-800 antialiased min-h-screen">
+    <!-- Header -->
+    <header class="bg-white backdrop-blur-md border-b border-gray-200 fixed top-0 left-0 right-0 z-50" id="siteHeader">
+      <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <a href="/" class="flex items-center gap-3 cursor-pointer group">
+            <svg class="w-6 h-6 text-brand-600 group-hover:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <svg class="w-6 h-6 text-brand-600 hidden group-hover:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+            </svg>
+            <div>
+              <h1 class="text-base font-semibold text-gray-900">系统设计文档平台</h1>
+              <p class="text-xs text-gray-400 mt-0.5">{project.name}</p>
+            </div>
+          </a>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="themeToggle" class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors" title="切换暗色模式">
+            <svg id="themeIconSun" class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+            </svg>
+            <svg id="themeIconMoon" class="w-4 h-4 text-gray-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 404 Content -->
+    <main class="max-w-6xl mx-auto pt-[88px]">
+      <div class="flex flex-col items-center justify-center py-64">
+        <!-- 404 大字 -->
+        <div class="relative mb-8">
+          <span class="text-8xl md:text-9xl font-bold text-brand-600 select-none">404</span>
+          <div class="absolute -inset-4 bg-brand-100/50 rounded-3xl blur-2xl -z-10"></div>
+        </div>
+
+        <!-- 标题和描述 -->
+        <h1 class="text-2xl font-semibold text-gray-900 mb-3">页面未找到</h1>
+        <p class="text-gray-500 text-center max-w-md mb-8">
+          你要访问的页面可能已被删除、重命名，或者链接地址有误。
+        </p>
+
+        <!-- 操作按钮 -->
+        <div class="flex flex-col sm:flex-row items-center gap-3">
+          <a
+            href="/"
+            style="background-color: #4f6ef7;"
+            class="inline-flex items-center gap-2 px-5 py-2.5 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all text-sm hover:opacity-90"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+            </svg>
+            返回首页
+          </a>
+          <button
+            id="goBackBtn"
+            class="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg border border-gray-200 hover:border-gray-300 transition-all text-sm cursor-pointer"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m0 0v14"></path>
+            </svg>
+            返回上一页
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-4">
+      <div class="max-w-6xl mx-auto px-6 text-center text-xs text-gray-400">
+        系统设计文档平台
+      </div>
+    </footer>
+
+    <script>
+      // Theme toggle
+      const themeToggle = document.getElementById('themeToggle');
+      const iconSun = document.getElementById('themeIconSun');
+      const iconMoon = document.getElementById('themeIconMoon');
+
+      function setTheme(dark) {
+        if (dark) {
+          document.documentElement.classList.add('dark');
+          if (iconSun) iconSun.classList.add('hidden');
+          if (iconMoon) iconMoon.classList.remove('hidden');
+          localStorage.setItem('theme', 'dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+          if (iconSun) iconSun.classList.remove('hidden');
+          if (iconMoon) iconMoon.classList.add('hidden');
+          localStorage.setItem('theme', 'light');
+        }
+      }
+
+      // Initialize icon state
+      var isDark = document.documentElement.classList.contains('dark');
+      if (isDark) {
+        if (iconSun) iconSun.classList.add('hidden');
+        if (iconMoon) iconMoon.classList.remove('hidden');
+      }
+
+      themeToggle?.addEventListener('click', () => {
+        setTheme(!document.documentElement.classList.contains('dark'));
+      });
+
+      // Go back button
+      const btn = document.getElementById('goBackBtn');
+      btn?.addEventListener('click', () => {
+        if (document.referrer) {
+          window.history.back();
+        } else {
+          window.location.href = '/';
+        }
+      });
+    </script>
+  </body>
+</html>

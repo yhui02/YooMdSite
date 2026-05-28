@@ -1,0 +1,48 @@
+---
+import DocLayout from "../../layouts/DocLayout.astro";
+import { getDocTree } from "../../lib/docs";
+
+export async function getStaticPaths() {
+    const docTree = await getDocTree();
+
+    function flattenTree(nodes: any[]): any[] {
+        const files: any[] = [];
+        for (const node of nodes) {
+            if (node.isFile) {
+                files.push(node);
+            } else if (node.children) {
+                files.push(...flattenTree(node.children));
+            }
+        }
+        return files;
+    }
+
+    const files = flattenTree(docTree);
+
+    return files.map((file) => ({
+        params: { path: file.path },
+        props: { file },
+    }));
+}
+
+const { file } = Astro.props;
+const title = file.name;
+const currentPath = `/docs/${file.path}`;
+const lastModified = file.lastModified;
+
+// 格式化日期为 YYYY/M/D 格式
+function formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    return `${year}/${month}/${day}`;
+}
+---
+
+<DocLayout
+    title={title}
+    currentPath={currentPath}
+    lastModified={formatDate(lastModified)}
+>
+    <div set:html={file.htmlContent} />
+</DocLayout>

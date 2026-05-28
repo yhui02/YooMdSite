@@ -1,0 +1,314 @@
+---
+import DocLayout from "../layouts/DocLayout.astro";
+import { getDefaultProject } from "../config";
+import { getDocTree } from "../lib/docs";
+
+const project = getDefaultProject();
+const docTree = await getDocTree();
+
+function countTree(nodes: any[]): { dirs: number; docs: number } {
+    let dirs = 0;
+    let docs = 0;
+    for (const node of nodes) {
+        if (node.isFile) {
+            docs++;
+        } else {
+            dirs++;
+            const sub = countTree(node.children);
+            dirs += sub.dirs;
+            docs += sub.docs;
+        }
+    }
+    return { dirs, docs };
+}
+
+const { dirs: totalDirs, docs: totalDocs } = countTree(docTree);
+
+// 动态生成首页卡片
+function generateHomeCards(nodes: any[]): any[] {
+    return nodes
+        .filter((node) => !node.isFile) // 只取目录
+        .map((node, index) => {
+            // 获取第一个文档作为默认链接
+            const firstDoc = findFirstDoc(node);
+            // 获取子目录名称列表作为描述
+            const subItems = getSubItems(node);
+            return {
+                name: node.name,
+                path: firstDoc?.path || "",
+                subItems: subItems,
+                colorIndex: (index % 9) + 1, // 1-9 循环
+            };
+        });
+}
+
+function findFirstDoc(node: any): any {
+    if (node.isFile) return node;
+    for (const child of node.children || []) {
+        const found = findFirstDoc(child);
+        if (found) return found;
+    }
+    return null;
+}
+
+function getSubItems(node: any, depth: number = 0): string[] {
+    if (depth > 1) return []; // 最多两层
+    const items: string[] = [];
+    for (const child of node.children || []) {
+        if (child.isFile) {
+            // 文件：去掉编号前缀和 .md 后缀
+            const name = child.name.replace(/^\d+-/, "").replace(/\.md$/, "");
+            items.push(name);
+        } else if (!child.isFile && depth < 1) {
+            // 目录：递归获取子项
+            items.push(child.name);
+        }
+    }
+    return items.slice(0, 6); // 最多显示6项
+}
+
+const homeCards = generateHomeCards(docTree);
+
+// 目录图标配置
+const dirIcons: Record<string, string> = {
+    项目总览: "📋",
+    产品设计: "📝",
+    数据模型: "🗄️",
+    接口设计: "🔌",
+    业务规则: "⚙️",
+    页面设计: "🎨",
+    AI设计: "🤖",
+    技术架构: "🏗️",
+    测试设计: "🧪",
+    附录: "📎",
+};
+---
+
+<DocLayout title="首页" currentPath="/">
+    <style>
+        /* Card link styles - remove underline */
+        .card-home {
+            text-decoration: none;
+            border-color: transparent;
+        }
+        .card-home:hover {
+            text-decoration: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .card-home h2 {
+            margin-top: 0;
+        }
+
+        /* Light mode gradients */
+        .card-home-1 {
+            background: linear-gradient(135deg, #eff6ff, #e0e7ff);
+            border-color: #bfdbfe;
+        }
+        .card-home-2 {
+            background: linear-gradient(135deg, #ecfdf5, #ccfbf1);
+            border-color: #a7f3d0;
+        }
+        .card-home-3 {
+            background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+            border-color: #c4b5fd;
+        }
+        .card-home-4 {
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            border-color: #fcd34d;
+        }
+        .card-home-5 {
+            background: linear-gradient(135deg, #fff1f2, #fce7f3);
+            border-color: #fda4af;
+        }
+        .card-home-6 {
+            background: linear-gradient(135deg, #ecfeff, #e0f2fe);
+            border-color: #67e8f9;
+        }
+        .card-home-7 {
+            background: linear-gradient(135deg, #fdf4ff, #e0e7ff);
+            border-color: #d8b4fe;
+        }
+        .card-home-8 {
+            background: linear-gradient(135deg, #f8fafc, #f4f4f5);
+            border-color: #d1d5db;
+        }
+        .card-home-9 {
+            background: linear-gradient(135deg, #fefce8, #fef3c7);
+            border-color: #fde047;
+        }
+
+        /* Dark mode gradients */
+        html.dark .card-home-1 {
+            background: linear-gradient(135deg, #0c1929, #1a1a3e);
+            border-color: #1e3a5f;
+        }
+        html.dark .card-home-2 {
+            background: linear-gradient(135deg, #011e17, #0a2f2a);
+            border-color: #0d4f3d;
+        }
+        html.dark .card-home-3 {
+            background: linear-gradient(135deg, #2d1155, #3b1576);
+            border-color: #4c1d95;
+        }
+        html.dark .card-home-4 {
+            background: linear-gradient(135deg, #2a1002, #4a1a09);
+            border-color: #5c2d0e;
+        }
+        html.dark .card-home-5 {
+            background: linear-gradient(135deg, #2d0310, #4a0d26);
+            border-color: #701a31;
+        }
+        html.dark .card-home-6 {
+            background: linear-gradient(135deg, #042029, #063040);
+            border-color: #085066;
+        }
+        html.dark .card-home-7 {
+            background: linear-gradient(135deg, #2d0330, #1a1a3e);
+            border-color: #4a1050;
+        }
+        html.dark .card-home-8 {
+            background: linear-gradient(135deg, #0a0f14, #12121a);
+            border-color: #1e2836;
+        }
+        html.dark .card-home-9 {
+            background: linear-gradient(135deg, #281504, #4a2a08);
+            border-color: #5c3508;
+        }
+
+        /* Dark mode text colors */
+        html.dark .card-home h2 {
+            color: #f3f4f6;
+        }
+        html.dark .card-home p {
+            color: #d1d5db;
+        }
+        html.dark .card-home:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Tech stack section */
+        .tech-stack {
+            background: #f0f4ff;
+            border-color: #e0e7ff;
+        }
+        .tech-stack h2 {
+            color: #1f2937;
+            margin-top: 0;
+        }
+        .tech-stack .text-brand-700 {
+            color: #4f6ef7;
+        }
+        .tech-stack .text-gray-600 {
+            color: #4b5563;
+        }
+        html.dark .tech-stack {
+            background: #312e81;
+            border-color: #4c1d95;
+        }
+        html.dark .tech-stack h2 {
+            color: #f3f4f6;
+        }
+        html.dark .tech-stack .text-brand-700 {
+            color: #a5b4fc;
+        }
+        html.dark .tech-stack .text-gray-600 {
+            color: #d1d5db;
+        }
+
+        /* Usage guide section */
+        .usage-guide {
+            background: #f9fafb;
+            border-color: #e5e7eb;
+        }
+        .usage-guide h2 {
+            color: #1f2937;
+            margin-top: 0;
+        }
+        .usage-guide li {
+            color: #4b5563;
+        }
+        html.dark .usage-guide {
+            background: #374151;
+            border-color: #4b5563;
+        }
+        html.dark .usage-guide h2 {
+            color: #f3f4f6;
+        }
+        html.dark .usage-guide li {
+            color: #d1d5db;
+        }
+        html.dark .usage-guide code {
+            background: #4b5563;
+            color: #f87171;
+        }
+
+        /* Page title section */
+        .page-title-bar {
+            background: #4f6ef7;
+        }
+        html.dark .page-title-bar {
+            background: #6366f1;
+        }
+        .page-title-h1 {
+            color: #1f2937;
+        }
+        html.dark .page-title-h1 {
+            color: #f3f4f6;
+        }
+        .page-title-desc {
+            color: #6b7280;
+        }
+        html.dark .page-title-desc {
+            color: #9ca3af;
+        }
+    </style>
+    <div class="mb-8">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="page-title-bar w-2 h-6 rounded-full"></span>
+            <h1 class="page-title-h1 text-2xl font-semibold">
+                {project.name} 文档中心
+            </h1>
+        </div>
+        <p class="page-title-desc text-sm mb-6">{project.description}</p>
+        <p class="text-xs text-gray-500 mb-4">
+            共 {totalDirs} 个目录，{totalDocs} 个文档
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        {
+            homeCards.map((card) => {
+                const icon = dirIcons[card.name] || "📁";
+                const colorClass = `card-home-${card.colorIndex}`;
+                return (
+                    <a
+                        href={card.path ? `/docs/${card.path}` : "#"}
+                        class={`card-home ${colorClass} block p-4 rounded-lg border hover:shadow-md transition-all`}
+                    >
+                        <h2 class="text-base font-semibold text-gray-900 mb-1.5">
+                            {icon} {card.name}
+                        </h2>
+                        <p class="text-xs text-gray-600">
+                            {card.subItems.join("、")}
+                        </p>
+                    </a>
+                );
+            })
+        }
+    </div>
+
+    <div class="usage-guide block border rounded-lg p-5">
+        <h2 class="text-base font-semibold mb-3">💡 使用说明</h2>
+        <ul class="text-xs space-y-2">
+            <li>• 左侧导航栏按模块分类，点击快速切换文档</li>
+            <li>• 支持 Mermaid 流程图、ER 图、状态图等</li>
+            <li>• 支持代码高亮、表格、Markdown 完整语法</li>
+            <li>
+                • 修改 <code
+                    class="bg-gray-200 px-1.5 py-0.5 rounded text-red-600"
+                    >docs.config.js</code
+                > 可读取其他文档项目
+            </li>
+        </ul>
+    </div>
+</DocLayout>
