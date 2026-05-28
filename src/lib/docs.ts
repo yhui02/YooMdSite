@@ -1,12 +1,12 @@
 import { readdir, readFile, stat } from "fs/promises";
 import { join, relative, resolve } from "path";
-import { fileURLToPath } from "url";
 import MarkdownIt from "markdown-it";
 import taskLists from "markdown-it-task-lists";
 import hljs from "highlight.js";
 import { docsConfig, getDefaultProject } from "../config";
 
-const __dirname = resolve(fileURLToPath(import.meta.url), "../../");
+// 使用 process.cwd() 获取项目根目录
+const projectRoot = process.cwd();
 
 const md = new MarkdownIt({
   html: true,
@@ -61,7 +61,7 @@ export interface DocTreeNode {
 
 // 解析文档路径
 function resolveDocsPath(relativePath: string): string {
-  return resolve(__dirname, relativePath);
+  return resolve(projectRoot, "src", relativePath);
 }
 
 // 渲染 Markdown 为 HTML

@@ -36,7 +36,7 @@ export const docsConfig = {
   docsPaths: [
     {
       name: "Simple CRM",
-      path: "./content/docs/simple-crm(eg)",
+      path: "./content/docs/simple-crm-demo",
       description: "简单CRM系统设计文档（示例）",
     },
   ],
