@@ -3,6 +3,18 @@ import DocLayout from "../layouts/DocLayout.astro";
 import { getDefaultProject } from "../config";
 import { getDocTree } from "../lib/docs";
 
+// 获取 base 路径，用于 GitHub Pages 部署
+// Astro 默认 BASE_URL 是 "/"，需要特殊处理
+const baseUrl = import.meta.env.BASE_URL;
+const hasCustomBase = baseUrl && baseUrl !== "/";
+
+// 辅助函数：拼接路径
+function withBase(path: string): string {
+    const cleanPath = path.startsWith("/") ? path.slice(1) : path;
+    if (!hasCustomBase) return `/${cleanPath}`;
+    return `${baseUrl}/${cleanPath}`;
+}
+
 const project = getDefaultProject();
 const docTree = await getDocTree();
 
@@ -282,7 +294,7 @@ const dirIcons: Record<string, string> = {
                 const colorClass = `card-home-${card.colorIndex}`;
                 return (
                     <a
-                        href={card.path ? `/docs/${card.path}` : "#"}
+                        href={card.path ? withBase(`/docs/${card.path}`) : "#"}
                         class={`card-home ${colorClass} block p-4 rounded-lg border hover:shadow-md transition-all`}
                     >
                         <h2 class="text-base font-semibold text-gray-900 mb-1.5">

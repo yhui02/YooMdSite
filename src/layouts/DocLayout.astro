@@ -2,6 +2,18 @@
 import { getDocTree } from "../lib/docs";
 import { getDefaultProject, getSiteName } from "../config";
 
+// 获取 base 路径，用于 GitHub Pages 部署
+// Astro 默认 BASE_URL 是 "/"，需要特殊处理
+const baseUrl = import.meta.env.BASE_URL;
+const hasCustomBase = baseUrl && baseUrl !== "/";
+
+// 辅助函数：拼接路径
+function withBase(path: string): string {
+    const cleanPath = path.startsWith("/") ? path.slice(1) : path;
+    if (!hasCustomBase) return `/${cleanPath}`;
+    return `${baseUrl}/${cleanPath}`;
+}
+
 interface Props {
     title?: string;
     currentPath?: string;
@@ -49,7 +61,11 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
     if (node.isFile && node.path) {
         const indent = `${12 + depth * 16}px`;
         const isActive = `/docs/${node.path}` === currentPath ? " active" : "";
-        return `<a href="/docs/${node.path}" class="sidebar-link${isActive}" style="padding-left:${indent}">${node.name}</a>`;
+        // JS 模板字符串需要完整路径（带前导 /）
+        const href = hasCustomBase
+            ? `${baseUrl}/docs/${node.path}`
+            : `/docs/${node.path}`;
+        return `<a href="${href}" class="sidebar-link${isActive}" style="padding-left:${indent}">${node.name}</a>`;
     }
 
     if (node.children.length > 0) {
@@ -85,7 +101,7 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" type="image/svg+xml" href={withBase("/favicon.svg")} />
         <meta name="generator" content={Astro.generator} />
         <title>{title} - {siteName}</title>
         <!-- 暗色模式初始化 - 必须在 CSS 之前执行，防止闪烁 -->
@@ -928,7 +944,7 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
             >
                 <div class="flex items-center gap-3">
                     <a
-                        href="/"
+                        href={withBase("/")}
                         class="flex items-center gap-3 cursor-pointer group"
                         title="返回首页"
                     >
