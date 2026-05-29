@@ -10,6 +10,9 @@ export default defineConfig({
   site: site,
   base: base,
   integrations: [tailwind()],
+  devToolbar: {
+    enabled: false,
+  },
   markdown: {
     shikiConfig: {
       theme: "github-dark",

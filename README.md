@@ -39,12 +39,12 @@ export const docsConfig = {
   siteName: "YooMdSite",
   docsPaths: [
     {
-      name: "Simple CRM",
-      path: "./content/docs/simple-crm-demo",
-      description: "简单CRM系统设计文档（示例）",
+      name: "我的项目",
+      path: "./content/docs/my-project",
+      description: "我的项目文档说明",
     },
   ],
-  defaultDoc: "Simple CRM",
+  defaultDoc: "我的项目",
 };
 ```
 

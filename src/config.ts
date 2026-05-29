@@ -6,12 +6,12 @@ export const docsConfig = {
   siteName: "YooMdSite",
   docsPaths: [
     {
-      name: "Simple CRM",
-      path: "./content/docs/simple-crm-demo",
-      description: "简单CRM系统设计文档（示例）",
+      name: "YooMdSite",
+      path: "./content/docs/yoomdsite-docs",
+      description: "YooMdSite 平台说明文档",
     },
   ],
-  defaultDoc: "Simple CRM",
+  defaultDoc: "YooMdSite",
 };
 
 // 获取网站名称

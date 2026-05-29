@@ -535,6 +535,9 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
             article blockquote > ul:last-child {
                 margin-bottom: 0;
             }
+            article blockquote > p:last-child {
+                margin-bottom: 0;
+            }
             article hr {
                 border: none;
                 border-top: 1px solid #e5e7eb;
@@ -1197,7 +1200,25 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
                 mermaids.forEach((el) => {
                     // Skip if already wrapped or if mermaid hasn't rendered SVG yet
                     if (el.closest(".mermaid-container")) return;
-                    if (!el.querySelector("svg")) return;
+                    const svg = el.querySelector("svg");
+                    if (!svg) return;
+
+                    // 甘特图特殊处理：通过 viewBox 判断是否是宽图表
+                    const viewBox = svg.getAttribute("viewBox") || "";
+                    const parts = viewBox.split(" ");
+                    const svgWidth =
+                        parts.length >= 4 ? parseFloat(parts[2]) : 0;
+                    const isWideChart = svgWidth > 800;
+
+                    if (isWideChart) {
+                        // 宽图表：移除固定宽高，设置自适应
+                        svg.removeAttribute("width");
+                        svg.removeAttribute("height");
+                        svg.style.width = "100%";
+                        svg.style.maxWidth = "100%";
+                        svg.style.height = "auto";
+                        svg.style.display = "block";
+                    }
 
                     mermaidCounter++;
                     const id = `mermaid-${mermaidCounter}`;
@@ -1206,6 +1227,10 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
                     const container = document.createElement("div");
                     container.className = "mermaid-container";
                     container.dataset.mermaidId = id;
+                    // 如果是宽图表，取消居中
+                    if (isWideChart) {
+                        container.style.alignItems = "flex-start";
+                    }
                     // Save original graph content for theme switching
                     container.dataset.graph = el.textContent;
 
@@ -1424,6 +1449,9 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
                 startOnLoad: false,
                 theme: "default",
                 securityLevel: "loose",
+                gantt: {
+                    useWidth: 1000, // 设置甘特图最小宽度
+                },
             });
 
             // Manually run mermaid rendering
