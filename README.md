@@ -1,6 +1,6 @@
 # YooMdSite
 
-通用的 Markdown 文档阅读平台，支持在线查看 Markdown 格式的设计文档，包括 Mermaid 流程图、ER 图、状态图等。
+通用的 Markdown 文档阅读平台，支持在线查看 Markdown 格式的设计文档，包括 Mermaid 流程图、ER 图、状态图等。将Markdown文档添加到项目中，即可在线查看，支持多级目录、多文件。
 
 ## 功能特性
 
@@ -80,4 +80,4 @@ pnpm preview
 
 ## License
 
-MIT
+Apache 2.0
