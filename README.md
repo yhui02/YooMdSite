@@ -2,6 +2,8 @@
 
 通用的 Markdown 文档阅读平台，支持在线查看 Markdown 格式的设计文档，包括 Mermaid 流程图、ER 图、状态图等。将Markdown文档添加到项目中，即可在线查看，支持多级目录、多文件。
 
+**在线演示**：https://yhui02.github.io/YooMdSite/
+
 ## 功能特性
 
 - **Markdown 文档渲染**：支持完整 Markdown 语法

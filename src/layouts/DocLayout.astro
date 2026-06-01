@@ -859,8 +859,10 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
                 align-items: center;
             }
             .mermaid-modal-content svg {
-                width: 100%;
-                height: 100%;
+                max-width: 90vw;
+                max-height: 90vh;
+                width: auto;
+                height: auto;
                 display: block;
                 transition: transform 0.15s ease;
                 transform-origin: center center;
@@ -1273,7 +1275,16 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
                 const content = document.getElementById("mermaidModalContent");
                 content.innerHTML = "";
                 const clone = svgElement.cloneNode(true);
+
+                // Remove fixed dimensions so SVG fits within viewport
+                clone.removeAttribute("width");
+                clone.removeAttribute("height");
+                clone.style.width = "auto";
+                clone.style.height = "auto";
+                clone.style.maxWidth = "90vw";
+                clone.style.maxHeight = "90vh";
                 clone.style.transform = "scale(1)";
+
                 content.appendChild(clone);
                 currentScale = 1;
                 modal.classList.add("open");
@@ -1458,10 +1469,30 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
             try {
                 await mermaid.run();
                 mermaidFinished = true;
-                // After mermaid finishes, wrap diagrams with toolbar
-                setTimeout(() => {
-                    wrapMermaidDiagrams();
-                }, 500);
+                // After mermaid finishes, wrap diagrams with toolbar.
+                // Some diagram types (e.g. stateDiagram-v2) may insert their SVG
+                // asynchronously after mermaid.run() resolves, so we poll until
+                // all diagrams are wrapped (max 4 seconds).
+                wrapMermaidDiagrams();
+                let wrapRetries = 0;
+                const wrapRetry = setInterval(() => {
+                    wrapRetries++;
+                    // Check if any unwrapped .mermaid divs still lack an SVG
+                    // (mermaid may still be rendering them)
+                    const pending = Array.from(
+                        document.querySelectorAll("article .mermaid"),
+                    ).filter((el) => !el.closest(".mermaid-container"));
+                    const allHaveSvg = pending.every((el) =>
+                        el.querySelector("svg"),
+                    );
+                    if (pending.length === 0 || allHaveSvg || wrapRetries >= 20) {
+                        // Final wrap attempt for any that now have SVGs
+                        if (pending.length > 0) wrapMermaidDiagrams();
+                        clearInterval(wrapRetry);
+                    } else {
+                        wrapMermaidDiagrams();
+                    }
+                }, 200);
             } catch (e) {
                 console.error("Mermaid run error:", e);
             }
