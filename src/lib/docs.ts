@@ -1,9 +1,10 @@
 import { readdir, readFile, stat } from "fs/promises";
-import { join, relative, resolve } from "path";
+import { join, relative, resolve, isAbsolute } from "path";
 import MarkdownIt from "markdown-it";
 import taskLists from "markdown-it-task-lists";
 import hljs from "highlight.js";
 import { docsConfig, getDefaultProject } from "../config";
+import { isSSRMode, getActiveProject } from "./config-store";
 
 // 使用 process.cwd() 获取项目根目录
 const projectRoot = process.cwd();
@@ -60,8 +61,13 @@ export interface DocTreeNode {
 }
 
 // 解析文档路径
-function resolveDocsPath(relativePath: string): string {
-  return resolve(projectRoot, "src", relativePath);
+function resolveDocsPath(configPath: string): string {
+  // SSR 模式下，config-store 返回的是绝对路径
+  if (isAbsolute(configPath)) {
+    return configPath;
+  }
+  // SSG 模式下，相对于项目 src 目录
+  return resolve(projectRoot, "src", configPath);
 }
 
 // 渲染 Markdown 为 HTML
@@ -138,9 +144,34 @@ async function buildDocTree(
   return nodes;
 }
 
-// 获取文档树
+// 获取文档树（自动适配 SSG/SSR 模式）
 export async function getDocTree(): Promise<DocTreeNode[]> {
-  const project = getDefaultProject();
+  let configPath: string;
+
+  if (isSSRMode()) {
+    // SSR 模式：从运行时配置读取
+    const project = getActiveProject();
+    configPath = project.path;
+  } else {
+    // SSG 模式：从静态配置读取
+    const project = getDefaultProject();
+    configPath = project.path;
+  }
+
+  const docsPath = resolveDocsPath(configPath);
+  return buildDocTree(docsPath, docsPath);
+}
+
+// SSR 模式：根据指定名称获取文档树
+export async function getDocTreeByName(
+  name: string,
+): Promise<DocTreeNode[]> {
+  const { loadSettings } = await import("./config-store");
+  const settings = loadSettings();
+  const project = settings.docsPaths.find((p) => p.name === name);
+  if (!project) {
+    throw new Error(`文档路径 "${name}" 不存在`);
+  }
   const docsPath = resolveDocsPath(project.path);
   return buildDocTree(docsPath, docsPath);
 }

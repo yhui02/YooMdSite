@@ -3,6 +3,7 @@ node_modules
 .idea
 dist/
 .astro/
+data/
 package-lock.json
 pnpm-workspace.yaml
 docs/superpowers/

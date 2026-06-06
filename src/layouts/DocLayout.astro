@@ -1,6 +1,7 @@
 ---
 import { getDocTree } from "../lib/docs";
 import { getDefaultProject, getSiteName } from "../config";
+import { isSSRMode, getActiveProject } from "../lib/config-store";
 
 // 获取 base 路径，用于 GitHub Pages 部署
 // Astro 默认 BASE_URL 是 "/"，需要特殊处理
@@ -19,6 +20,7 @@ interface Props {
     currentPath?: string;
     lastModified?: string;
     tocMode?: "tree" | "article"; // tree: 文档树导航, article: 文章目录
+    hideSidebar?: boolean; // 隐藏左侧目录树
 }
 
 interface DocTreeNode {
@@ -33,9 +35,10 @@ const {
     currentPath = "",
     lastModified = "",
     tocMode = "tree",
+    hideSidebar = false,
 } = Astro.props as Props;
 const docTree = await getDocTree();
-const project = getDefaultProject();
+const project = isSSRMode() ? getActiveProject() : getDefaultProject();
 const siteName = getSiteName();
 
 // 统计目录和文档数量
@@ -119,6 +122,10 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
             })();
         </script>
         <style is:global>
+            .btn-primary:hover {
+                background-color: #3b5de7 !important;
+                color: #ffffff !important;
+            }
             @media print {
                 .no-print {
                     display: none;
@@ -392,6 +399,19 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
                 margin-bottom: 1.5rem;
                 font-size: 0.875rem;
             }
+            /* 移动端表格横向滚动，保持所有列 */
+            @media (max-width: 768px) {
+                article table {
+                    display: block;
+                    overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                    white-space: normal;
+                }
+                article table th,
+                article table td {
+                    min-width: 120px;
+                }
+            }
             article thead {
                 background: #f9fafb;
                 color: #6b7280;
@@ -437,6 +457,14 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
                 word-wrap: break-word;
                 word-break: break-all;
                 border: 1px solid #e5e7eb;
+            }
+            /* 移动端代码块优化 */
+            @media (max-width: 768px) {
+                article pre {
+                    padding: 0.75rem;
+                    font-size: 0.8125rem;
+                    -webkit-overflow-scrolling: touch;
+                }
             }
             /* 无语言标识的代码块 - 不显示为代码块样式 */
             article pre[data-language="text"],
@@ -745,6 +773,15 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
             html.dark #themeToggle svg {
                 color: #d1d5db !important;
             }
+            html.dark #settingsBtn {
+                background: #374151 !important;
+            }
+            html.dark #settingsBtn:hover {
+                background: #4b5563 !important;
+            }
+            html.dark #settingsBtn svg {
+                color: #d1d5db !important;
+            }
             html.dark header h1 {
                 color: #f3f4f6 !important;
             }
@@ -763,6 +800,10 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
             html.dark aside {
                 background: #111827 !important;
                 border-color: #1f2937 !important;
+            }
+            /* 暗色模式下移动端侧边栏遮罩 */
+            html.dark .sidebar-overlay {
+                background: rgba(0, 0, 0, 0.7);
             }
 
             /* Mermaid Diagrams - base styles */
@@ -937,6 +978,433 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
                 color: #86efac;
                 border-color: #166534;
             }
+
+            /* Mobile Responsive Styles */
+            .mobile-menu-btn {
+                display: none;
+            }
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 40;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+            .sidebar-overlay.active {
+                display: block;
+                opacity: 1;
+            }
+
+            @media (max-width: 768px) {
+                .mobile-menu-btn {
+                    display: flex;
+                }
+                .desktop-nav {
+                    display: none;
+                }
+                aside {
+                    position: fixed !important;
+                    left: -280px !important;
+                    top: 0;
+                    bottom: 0;
+                    width: 280px;
+                    z-index: 50;
+                    transition: left 0.3s ease;
+                    box-shadow: none;
+                    margin-top: 0 !important;
+                    height: 100vh !important;
+                    top: 0 !important;
+                }
+                aside.open {
+                    left: 0 !important;
+                    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+                }
+                .main-content-wrapper {
+                    padding-left: 0 !important;
+                    padding-right: 0 !important;
+                }
+                .article-content-area {
+                    padding: 16px !important;
+                }
+                .header-container {
+                    padding-left: 16px !important;
+                    padding-right: 16px !important;
+                }
+                .project-description {
+                    display: none;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .header-project-name {
+                    font-size: 14px !important;
+                }
+                .article-content-area {
+                    padding: 12px !important;
+                }
+                article h1 {
+                    font-size: 1.25rem !important;
+                }
+                article h2 {
+                    font-size: 1.125rem !important;
+                }
+                article h3 {
+                    font-size: 1rem !important;
+                }
+            }
+
+            /* Settings Modal */
+            .settings-modal {
+                display: none;
+                position: fixed;
+                inset: 0;
+                z-index: 9998;
+                background: rgba(0, 0, 0, 0.5);
+                justify-content: center;
+                align-items: center;
+            }
+            .settings-modal.open {
+                display: flex;
+            }
+            .settings-modal-content {
+                background: #fff;
+                border-radius: 12px;
+                width: 90%;
+                max-width: 520px;
+                max-height: 80vh;
+                overflow-y: auto;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            }
+            .settings-modal-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 16px 20px;
+                border-bottom: 1px solid #e5e7eb;
+            }
+            .settings-modal-header h2 {
+                font-size: 16px;
+                font-weight: 600;
+                color: #111827;
+                margin: 0;
+            }
+            .settings-modal-close {
+                width: 28px;
+                height: 28px;
+                border-radius: 6px;
+                border: none;
+                background: transparent;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #6b7280;
+            }
+            .settings-modal-close:hover {
+                background: #f3f4f6;
+            }
+            .settings-modal-body {
+                padding: 16px 20px;
+            }
+            .settings-path-item {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 12px;
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                margin-bottom: 8px;
+                transition: all 0.15s ease;
+            }
+            .settings-path-item.is-default {
+                border-color: #a5b4fc;
+                background: #eef2ff;
+            }
+            /* 路径不存在时的样式 */
+            .settings-path-item.path-missing {
+                border-color: #fca5a5;
+                background: #fef2f2;
+            }
+            .settings-path-item.path-missing .settings-path-name {
+                color: #dc2626;
+            }
+            .settings-path-item.path-missing .settings-path-dir {
+                color: #b91c1c;
+            }
+            .path-missing-text {
+                color: #dc2626 !important;
+                text-decoration: line-through;
+            }
+            .settings-path-info {
+                flex: 1;
+                min-width: 0;
+            }
+            .settings-path-name {
+                font-size: 14px;
+                font-weight: 500;
+                color: #111827;
+            }
+            .settings-path-dir {
+                font-size: 12px;
+                color: #6b7280;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                margin-top: 2px;
+            }
+            .settings-path-actions {
+                display: flex;
+                gap: 2px;
+                flex-shrink: 0;
+            }
+            .settings-path-actions button {
+                padding: 4px 8px;
+                font-size: 12px;
+                border-radius: 4px;
+                border: none;
+                cursor: pointer;
+                transition: all 0.15s ease;
+            }
+            .settings-btn-default {
+                color: #4f46e5;
+                background: transparent;
+            }
+            .settings-btn-default:hover {
+                background: #eef2ff;
+            }
+            .settings-btn-edit {
+                color: #6b7280;
+                background: transparent;
+            }
+            .settings-btn-edit:hover {
+                background: #f3f4f6;
+            }
+            .settings-btn-delete {
+                color: #ef4444;
+                background: transparent;
+            }
+            .settings-btn-delete:hover {
+                background: #fef2f2;
+            }
+            .settings-btn-copy {
+                color: #059669;
+                background: transparent;
+            }
+            .settings-btn-copy:hover {
+                background: #ecfdf5;
+            }
+            .settings-badge {
+                font-size: 11px;
+                background: #eef2ff;
+                color: #4f46e5;
+                padding: 1px 8px;
+                border-radius: 9999px;
+                margin-left: 6px;
+            }
+            /* 默认文档标签 - 更醒目的样式 */
+            .settings-badge-default {
+                font-size: 11px;
+                background: linear-gradient(135deg, #4f46e5, #7c3aed);
+                color: #ffffff;
+                padding: 2px 10px;
+                border-radius: 9999px;
+                margin-left: 6px;
+                font-weight: 600;
+                box-shadow: 0 1px 3px rgba(79, 70, 229, 0.3);
+            }
+            .settings-add-btn {
+                width: 100%;
+                padding: 10px;
+                border: 2px dashed #d1d5db;
+                border-radius: 8px;
+                background: transparent;
+                color: #6b7280;
+                font-size: 13px;
+                cursor: pointer;
+                transition: all 0.15s ease;
+                margin-top: 4px;
+            }
+            .settings-add-btn:hover {
+                border-color: #818cf8;
+                color: #4f46e5;
+            }
+            .settings-form {
+                margin-top: 12px;
+                padding: 12px;
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                background: #f9fafb;
+            }
+            .settings-form h3 {
+                font-size: 14px;
+                font-weight: 600;
+                color: #374151;
+                margin: 0 0 10px 0;
+            }
+            .settings-form label {
+                display: block;
+                font-size: 12px;
+                font-weight: 500;
+                color: #374151;
+                margin-bottom: 4px;
+            }
+            .settings-form input {
+                width: 100%;
+                padding: 6px 10px;
+                border: 1px solid #d1d5db;
+                border-radius: 6px;
+                font-size: 13px;
+                margin-bottom: 8px;
+                box-sizing: border-box;
+            }
+            .settings-form input:focus {
+                outline: none;
+                border-color: #818cf8;
+                box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2);
+            }
+            .settings-form-actions {
+                display: flex;
+                justify-content: flex-end;
+                gap: 6px;
+                margin-top: 4px;
+            }
+            .settings-form-actions button {
+                padding: 6px 14px;
+                font-size: 13px;
+                border-radius: 6px;
+                border: none;
+                cursor: pointer;
+            }
+            .settings-form-cancel {
+                background: #f3f4f6;
+                color: #374151;
+            }
+            .settings-form-cancel:hover {
+                background: #e5e7eb;
+            }
+            .settings-form-save {
+                background: #4f46e5;
+                color: #fff;
+            }
+            .settings-form-save:hover {
+                background: #4338ca;
+            }
+            .settings-error {
+                font-size: 12px;
+                color: #ef4444;
+                margin-top: 4px;
+            }
+            .settings-ssr-notice {
+                background: #fffbeb;
+                border: 1px solid #fde68a;
+                border-radius: 8px;
+                padding: 12px;
+                font-size: 13px;
+                color: #92400e;
+                margin-bottom: 12px;
+            }
+            .settings-ssr-notice code {
+                background: #fef3c7;
+                padding: 1px 6px;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+
+            /* Dark mode settings modal */
+            html.dark .settings-modal-content {
+                background: #1f2937;
+            }
+            html.dark .settings-modal-header {
+                border-color: #374151;
+            }
+            html.dark .settings-modal-header h2 {
+                color: #f3f4f6;
+            }
+            html.dark .settings-modal-close {
+                color: #9ca3af;
+            }
+            html.dark .settings-modal-close:hover {
+                background: #374151;
+            }
+            html.dark .settings-path-item {
+                border-color: #374151;
+                background: #111827;
+            }
+            html.dark .settings-path-item.is-default {
+                border-color: #4f46e5;
+                background: #312e81;
+            }
+            /* 暗色模式下路径不存在 */
+            html.dark .settings-path-item.path-missing {
+                border-color: #7f1d1d;
+                background: #450a0a;
+            }
+            html.dark .settings-path-item.path-missing .settings-path-name {
+                color: #fca5a5;
+            }
+            html.dark .settings-path-item.path-missing .settings-path-dir {
+                color: #f87171;
+            }
+            html.dark .path-missing-text {
+                color: #f87171 !important;
+            }
+            html.dark .settings-path-name {
+                color: #f3f4f6;
+            }
+            html.dark .settings-path-dir {
+                color: #9ca3af;
+            }
+            html.dark .settings-badge {
+                background: #312e81;
+                color: #a5b4fc;
+            }
+            /* 暗色模式下默认文档标签 */
+            html.dark .settings-badge-default {
+                background: linear-gradient(135deg, #6366f1, #8b5cf6);
+                color: #ffffff;
+                box-shadow: 0 1px 3px rgba(99, 102, 241, 0.4);
+            }
+            html.dark .settings-add-btn {
+                border-color: #4b5563;
+                color: #9ca3af;
+            }
+            html.dark .settings-add-btn:hover {
+                border-color: #818cf8;
+                color: #a5b4fc;
+            }
+            html.dark .settings-form {
+                background: #111827;
+                border-color: #374151;
+            }
+            html.dark .settings-form h3 {
+                color: #f3f4f6;
+            }
+            html.dark .settings-form label {
+                color: #d1d5db;
+            }
+            html.dark .settings-form input {
+                background: #1f2937;
+                border-color: #4b5563;
+                color: #f3f4f6;
+            }
+            html.dark .settings-form-cancel {
+                background: #374151;
+                color: #d1d5db;
+            }
+            html.dark .settings-form-cancel:hover {
+                background: #4b5563;
+            }
+            html.dark .settings-ssr-notice {
+                background: #451a03;
+                border-color: #92400e;
+                color: #fcd34d;
+            }
+            html.dark .settings-ssr-notice code {
+                background: #78350f;
+                color: #fde68a;
+            }
         </style>
     </head>
     <body class="bg-white text-gray-800 antialiased">
@@ -945,9 +1413,29 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
             class="bg-white/80 backdrop-blur-md border-b border-gray-200 no-print fixed top-0 left-0 right-0 z-50"
         >
             <div
-                class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between"
+                class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between header-container"
             >
                 <div class="flex items-center gap-3">
+                    <!-- 移动端汉堡菜单按钮 -->
+                    <button
+                        id="mobileMenuBtn"
+                        class="mobile-menu-btn w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors md:hidden"
+                        title="打开导航菜单"
+                    >
+                        <svg
+                            class="w-5 h-5 text-gray-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16"
+                            ></path>
+                        </svg>
+                    </button>
                     <a
                         href={withBase("/")}
                         class="flex items-center gap-3 cursor-pointer group"
@@ -970,16 +1458,41 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
                             </svg>
                         </div>
                         <div>
-                            <h1 class="text-base font-semibold text-gray-900">
+                            <h1 class="text-base font-semibold text-gray-900 header-project-name">
                                 {siteName}
                             </h1>
-                            <p class="text-xs text-gray-400 mt-0.5">
+                            <p class="text-xs text-gray-400 mt-0.5 project-description">
                                 {project.description || project.name}
                             </p>
                         </div>
                     </a>
                 </div>
                 <div class="flex items-center gap-2">
+                    <button
+                        id="settingsBtn"
+                        class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+                        title="系统设置"
+                    >
+                        <svg
+                            class="w-4 h-4 text-gray-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                            ></path>
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            ></path>
+                        </svg>
+                    </button>
                     <button
                         id="themeToggle"
                         class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
@@ -1001,7 +1514,7 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
                         </svg>
                         <svg
                             id="themeIconMoon"
-                            class="w-5 h-5 text-gray-600 hidden"
+                            class="w-4 h-4 text-gray-600 hidden"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -1020,10 +1533,15 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
 
         <!-- Main Container -->
         <div class="max-w-6xl mx-auto pt-[75px]">
-            <div class="flex bg-white min-h-screen">
+            <!-- 侧边栏遮罩(移动端) -->
+            <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+            <div class="flex bg-white min-h-screen main-content-wrapper">
                 <!-- Sidebar -->
+                {!hideSidebar && (
                 <aside
-                    class="w-64 bg-gray-50 border-r border-gray-200 no-print sticky top-[75px] h-[calc(100vh-75px)] flex-shrink-0 flex flex-col"
+                    class="w-64 bg-gray-50 border-r border-gray-200 no-print md:sticky sticky top-[75px] h-[calc(100vh-75px)] flex-shrink-0 flex flex-col"
+                    id="mainSidebar"
                 >
                     <!-- 切换按钮 -->
                     <div
@@ -1070,9 +1588,9 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
                         </div>
                     </nav>
                 </aside>
-
+                )}
                 <!-- Main Content -->
-                <main class="flex-1 py-8 px-8 min-w-0">
+                <main class="flex-1 py-8 px-8 min-w-0 article-content-area">
                     <!-- 文档标题栏 -->
                     <div
                         class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200"
@@ -1133,7 +1651,62 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
             </svg>
         </button>
 
+        <!-- Settings Modal -->
+        <div class="settings-modal" id="settingsModal">
+            <div class="settings-modal-content">
+                <div class="settings-modal-header">
+                    <h2>文档路径管理</h2>
+                    <button class="settings-modal-close" id="settingsModalClose">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="settings-modal-body" id="settingsBody">
+                    <div style="text-align:center;color:#9ca3af;font-size:13px;padding:24px 0;">加载中...</div>
+                </div>
+            </div>
+        </div>
+
         <script>
+            // ========== Mobile Menu Logic ==========
+            const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+            const mainSidebar = document.getElementById("mainSidebar");
+            const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+            function openMobileMenu() {
+                mainSidebar?.classList.add("open");
+                sidebarOverlay?.classList.add("active");
+                document.body.style.overflow = "hidden";
+            }
+
+            function closeMobileMenu() {
+                mainSidebar?.classList.remove("open");
+                sidebarOverlay?.classList.remove("active");
+                document.body.style.overflow = "";
+            }
+
+            mobileMenuBtn?.addEventListener("click", openMobileMenu);
+            sidebarOverlay?.addEventListener("click", closeMobileMenu);
+
+            // 点击侧边栏内的链接后关闭菜单(移动端)
+            mainSidebar?.querySelectorAll(".sidebar-link").forEach((link) => {
+                link.addEventListener("click", () => {
+                    if (window.innerWidth < 768) {
+                        closeMobileMenu();
+                    }
+                });
+            });
+
+            // 窗口大小变化时重置状态
+            window.addEventListener("resize", () => {
+                if (window.innerWidth >= 768) {
+                    closeMobileMenu();
+                    mainSidebar?.style.setProperty("left", "");
+                }
+            });
+
             // Dark mode toggle
             const themeToggle = document.getElementById("themeToggle");
             const iconSun = document.getElementById("themeIconSun");
@@ -1690,6 +2263,260 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
             // Initial setup
             generateArticleToc();
             processPriorityBadges();
+
+            // ========== Settings Modal ==========
+            const settingsModal = document.getElementById("settingsModal");
+            const settingsBody = document.getElementById("settingsBody");
+            let settingsEditingOldName = null;
+
+            function openSettings() {
+                settingsModal?.classList.add("open");
+                loadAndRenderSettings();
+            }
+
+            function closeSettings() {
+                settingsModal?.classList.remove("open");
+            }
+
+            document.getElementById("settingsBtn")?.addEventListener("click", openSettings);
+            document.getElementById("settingsModalClose")?.addEventListener("click", closeSettings);
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape" && settingsModal?.classList.contains("open")) {
+                    closeSettings();
+                }
+            });
+
+            async function loadAndRenderSettings() {
+                try {
+                    const res = await fetch("/api/settings");
+                    if (!res.ok) throw new Error("API 不可用");
+                    const settings = await res.json();
+                    renderSettings(settings);
+                } catch (e) {
+                    settingsBody!.innerHTML = `
+                        <div class="settings-ssr-notice">
+                            <strong>提示：</strong>动态管理文档路径需要 SSR 模式。<br>
+                            请使用 <code>pnpm dev:ssr</code> 启动。
+                        </div>`;
+                }
+            }
+
+            function renderSettings(settings) {
+                const { docsPaths, defaultDoc } = settings;
+                let html = docsPaths.map((p, i) => {
+                    const isDefault = p.name === defaultDoc;
+                    const pathExists = p.exists !== false; // 默认 true（兼容旧数据）
+                    const pathMissingClass = !pathExists ? "path-missing" : "";
+                    const missingWarning = !pathExists ? '<span class="settings-badge" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;margin-left:6px;">路径不存在</span>' : "";
+
+                    return `
+                    <div class="settings-path-item ${isDefault ? "is-default" : ""} ${pathMissingClass}">
+                        <div class="settings-path-info">
+                            <div class="settings-path-name">
+                                ${p.name}
+                                ${isDefault ? '<span class="settings-badge-default">默认</span>' : ""}
+                                ${p.preset ? '<span class="settings-badge" style="background:#f0fdf4;color:#16a34a;">预置</span>' : ""}
+                                ${missingWarning}
+                            </div>
+                            <div class="settings-path-dir ${!pathExists ? "path-missing-text" : ""}" title="${p.path}">${p.preset ? (p.description !== "系统预置文档" ? p.description : "点击右侧按钮设置描述") : p.path}</div>
+                        </div>
+                        <div class="settings-path-actions">
+                            ${p.name !== defaultDoc ? `<button class="settings-btn-default" data-action="setDefault" data-name="${p.name}">设为默认</button>` : ""}
+                            ${p.preset ? `
+                                <button class="settings-btn-edit" data-action="editPresetDesc" data-name="${p.name}" data-desc="${p.description || ""}">设置描述</button>
+                                ${p.presetSource === "data" ? `<button class="settings-btn-delete" data-action="deletePreset" data-name="${p.name}">删除</button>` : ""}
+                            ` : `
+                                <button class="settings-btn-copy" data-action="copy" data-name="${p.name}" title="复制到系统内">复制</button>
+                                <button class="settings-btn-edit" data-action="edit" data-index="${i}">编辑</button>
+                                <button class="settings-btn-delete" data-action="delete" data-name="${p.name}">删除</button>
+                            `}
+                        </div>
+                    </div>
+                `;
+                }).join("");
+
+                html += `<button class="settings-add-btn" id="settingsAddBtn">+ 添加文档路径</button>`;
+                html += `<div id="settingsFormArea"></div>`;
+                settingsBody!.innerHTML = html;
+
+                // Bind events
+                document.getElementById("settingsAddBtn")?.addEventListener("click", () => {
+                    settingsEditingOldName = null;
+                    showSettingsForm("添加文档路径", "", "", "");
+                });
+
+                settingsBody!.querySelectorAll("[data-action]").forEach((btn) => {
+                    btn.addEventListener("click", async () => {
+                        const action = (btn as HTMLElement).dataset.action;
+                        const name = (btn as HTMLElement).dataset.name;
+                        const index = (btn as HTMLElement).dataset.index;
+
+                        if (action === "setDefault") {
+                            await settingsApiPost({ action: "setDefault", name });
+                            setTimeout(() => { window.location.href = "/"; }, 300);
+                        } else if (action === "edit") {
+                            const p = settings.docsPaths[parseInt(index!)];
+                            settingsEditingOldName = p.name;
+                            showSettingsForm("编辑文档路径", p.name, p.path, p.description);
+                        } else if (action === "editPresetDesc") {
+                            const desc = (btn as HTMLElement).dataset.desc || "";
+                            showPresetDescForm(name!, desc);
+                        } else if (action === "delete") {
+                            if (confirm(`确定删除 "${name}" 吗？`)) {
+                                await settingsApiDelete(name!);
+                            }
+                        } else if (action === "deletePreset") {
+                            // 预置路径删除需要输入名称确认
+                            const confirmName = prompt(
+                                `⚠️ 删除预置文档将永久删除整个文件夹。\n\n请输入 "${name}" 确认删除：`,
+                            );
+                            if (confirmName === name) {
+                                try {
+                                    await settingsApiDelete(name!);
+                                    setTimeout(() => { window.location.reload(); }, 300);
+                                } catch (e) {
+                                    alert((e as Error).message);
+                                }
+                            } else if (confirmName !== null) {
+                                alert("输入的名称不匹配，已取消删除。");
+                            }
+                        } else if (action === "copy") {
+                            if (confirm(`将 "${name}" 的文档复制到系统内（src/content/docs/${name}）？\n复制后可直接删除外部路径。`)) {
+                                try {
+                                    await settingsApiPost({ action: "copy", name });
+                                    setTimeout(() => { window.location.href = "/"; }, 300);
+                                } catch (e) {
+                                    alert((e as Error).message);
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+
+            function showSettingsForm(title, name, path, desc) {
+                const area = document.getElementById("settingsFormArea");
+                if (!area) return;
+                area.innerHTML = `
+                    <div class="settings-form">
+                        <h3>${title}</h3>
+                        <label>路径</label>
+                        <input id="sf-path" value="${path}" placeholder="例如：/home/user/docs/project-a" />
+                        <label>名称</label>
+                        <input id="sf-name" value="${name}" placeholder="默认自动提取路径最后一级文件夹名" />
+                        <label>描述（可选）</label>
+                        <input id="sf-desc" value="${desc}" placeholder="例如：项目A的设计文档" />
+                        <div id="sf-error" class="settings-error" style="display:none"></div>
+                        <div class="settings-form-actions">
+                            <button class="settings-form-cancel" id="sf-cancel">取消</button>
+                            <button class="settings-form-save" id="sf-save">保存</button>
+                        </div>
+                    </div>`;
+
+                // 路径变化时，如果名称为空，自动提取路径最后一级文件夹名
+                let nameManuallyEdited = !!name; // 如果初始名称非空，认为已手动编辑过
+                const sfPath = document.getElementById("sf-path") as HTMLInputElement;
+                const sfName = document.getElementById("sf-name") as HTMLInputElement;
+
+                sfPath?.addEventListener("input", () => {
+                    if (!nameManuallyEdited && sfPath.value.trim()) {
+                        const trimmedPath = sfPath.value.trim().replace(/[/\\]+$/, "");
+                        sfName.value = trimmedPath.split(/[/\\]/).pop() || "";
+                    }
+                });
+
+                sfName?.addEventListener("input", () => {
+                    nameManuallyEdited = true; // 用户手动修改过名称
+                });
+
+                document.getElementById("sf-cancel")?.addEventListener("click", () => {
+                    area.innerHTML = "";
+                    settingsEditingOldName = null;
+                });
+
+                document.getElementById("sf-save")?.addEventListener("click", async () => {
+                    const n = (document.getElementById("sf-name") as HTMLInputElement).value.trim();
+                    const p = (document.getElementById("sf-path") as HTMLInputElement).value.trim();
+                    const d = (document.getElementById("sf-desc") as HTMLInputElement).value.trim();
+                    const errEl = document.getElementById("sf-error")!;
+
+                    if (!n || !p) {
+                        errEl.textContent = "名称和路径不能为空";
+                        errEl.style.display = "block";
+                        return;
+                    }
+
+                    try {
+                        if (settingsEditingOldName) {
+                            await settingsApiPost({ action: "update", oldName: settingsEditingOldName, name: n, path: p, description: d });
+                        } else {
+                            await settingsApiPost({ action: "add", name: n, path: p, description: d });
+                        }
+                        area.innerHTML = "";
+                        settingsEditingOldName = null;
+                    } catch (e) {
+                        errEl.textContent = (e as Error).message;
+                        errEl.style.display = "block";
+                    }
+                });
+            }
+
+            function showPresetDescForm(name, currentDesc) {
+                const area = document.getElementById("settingsFormArea");
+                if (!area) return;
+                area.innerHTML = `
+                    <div class="settings-form">
+                        <h3>设置描述 - ${name}</h3>
+                        <label>描述</label>
+                        <input id="sf-preset-desc" value="${currentDesc === "系统预置文档" ? "" : currentDesc}" placeholder="例如：YooMdSite 平台说明文档" />
+                        <div id="sf-error" class="settings-error" style="display:none"></div>
+                        <div class="settings-form-actions">
+                            <button class="settings-form-cancel" id="sf-cancel">取消</button>
+                            <button class="settings-form-save" id="sf-save">保存</button>
+                        </div>
+                    </div>`;
+
+                document.getElementById("sf-cancel")?.addEventListener("click", () => {
+                    area.innerHTML = "";
+                });
+
+                document.getElementById("sf-save")?.addEventListener("click", async () => {
+                    const desc = (document.getElementById("sf-preset-desc") as HTMLInputElement).value.trim();
+                    try {
+                        await settingsApiPost({ action: "setPresetDesc", name, description: desc || "系统预置文档" });
+                        area.innerHTML = "";
+                        setTimeout(() => window.location.reload(), 300);
+                    } catch (e) {
+                        const errEl = document.getElementById("sf-error")!;
+                        errEl.textContent = (e as Error).message;
+                        errEl.style.display = "block";
+                    }
+                });
+            }
+
+            async function settingsApiPost(body) {
+                const res = await fetch("/api/settings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                renderSettings(data);
+                return data;
+            }
+
+            async function settingsApiDelete(name) {
+                const res = await fetch("/api/settings", {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                renderSettings(data);
+                return data;
+            }
         </script>
     </body>
 </html>

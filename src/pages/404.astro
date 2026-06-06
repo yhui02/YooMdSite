@@ -1,5 +1,6 @@
 ---
 import { getDefaultProject, getSiteName } from "../config";
+import { isSSRMode, getActiveProject } from "../lib/config-store";
 
 // 获取 base 路径，用于 GitHub Pages 部署
 // Astro 默认 BASE_URL 是 "/"，需要特殊处理
@@ -13,7 +14,7 @@ function withBase(path: string): string {
     return `${baseUrl}/${cleanPath}`;
 }
 
-const project = getDefaultProject();
+const project = isSSRMode() ? getActiveProject() : getDefaultProject();
 const siteName = getSiteName();
 ---
 
@@ -45,6 +46,10 @@ const siteName = getSiteName();
             };
         </script>
         <style>
+            .btn-primary:hover {
+                background-color: #3b5de7 !important;
+                color: #ffffff !important;
+            }
             html.dark body {
                 background: #111827;
                 color: #e5e7eb;
@@ -304,8 +309,8 @@ const siteName = getSiteName();
                 <div class="flex flex-col sm:flex-row items-center gap-3">
                     <a
                         href={withBase("/")}
-                        style="background-color: #4f6ef7;"
-                        class="inline-flex items-center gap-2 px-5 py-2.5 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all text-sm hover:opacity-90"
+                        class="btn-primary inline-flex items-center gap-2 px-5 py-2.5 font-medium rounded-lg shadow-sm hover:shadow-md transition-all text-sm"
+                        style="background-color: #4f6ef7; color: #ffffff;"
                     >
                         <svg
                             class="w-4 h-4"

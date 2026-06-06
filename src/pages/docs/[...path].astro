@@ -1,8 +1,15 @@
 ---
 import DocLayout from "../../layouts/DocLayout.astro";
 import { getDocTree } from "../../lib/docs";
+import { isSSRMode } from "../../lib/config-store";
 
+const ssrMode = isSSRMode();
+
+// SSG 模式：预生成所有页面
 export async function getStaticPaths() {
+    // SSR 模式下不需要静态路径
+    if (process.env.RENDER_MODE === "ssr") return [];
+
     const docTree = await getDocTree();
 
     function flattenTree(nodes: any[]): any[] {
@@ -25,10 +32,38 @@ export async function getStaticPaths() {
     }));
 }
 
-const { file } = Astro.props;
-const title = file.name;
-const currentPath = `/docs/${file.path}`;
-const lastModified = file.lastModified;
+// SSR 模式：运行时解析请求的文档
+let file;
+let notFound = false;
+if (ssrMode) {
+    const pathParam = Astro.params.path;
+    if (!pathParam) {
+        return Astro.redirect("/");
+    }
+
+    const docTree = await getDocTree();
+
+    function findFile(nodes: any[], targetPath: string): any {
+        for (const node of nodes) {
+            if (node.isFile && node.path === targetPath) {
+                return node;
+            }
+            if (node.children) {
+                const found = findFile(node.children, targetPath);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
+
+    file = findFile(docTree, pathParam);
+
+    if (!file) {
+        notFound = true;
+    }
+} else {
+    file = Astro.props.file;
+}
 
 // 格式化日期为 YYYY/M/D 格式
 function formatDate(date: Date): string {
@@ -37,12 +72,58 @@ function formatDate(date: Date): string {
     const day = date.getDate();
     return `${year}/${month}/${day}`;
 }
+
+const title = notFound ? "页面未找到" : file.name;
+const currentPath = notFound ? "" : `/docs/${file.path}`;
+const lastModified = notFound ? undefined : file.lastModified;
 ---
 
-<DocLayout
-    title={title}
-    currentPath={currentPath}
-    lastModified={formatDate(lastModified)}
->
-    <div set:html={file.htmlContent} />
-</DocLayout>
+{notFound ? (
+    <DocLayout title="页面未找到" currentPath="" hideSidebar={true}>
+        <div class="flex flex-col items-center justify-center py-24">
+            <span class="text-8xl font-bold text-indigo-500 select-none mb-6">404</span>
+            <h1 class="text-2xl font-semibold text-gray-900 mb-3">页面未找到</h1>
+            <p class="text-gray-500 text-center max-w-md mb-8">
+                你要访问的页面可能已被删除、重命名，或者链接地址有误。
+            </p>
+            <div class="flex items-center gap-3">
+                <a
+                    href="/"
+                    class="btn-primary inline-flex items-center gap-2 px-5 py-2.5 font-medium rounded-lg shadow-sm hover:shadow-md transition-all text-sm"
+                    style="background-color: #4f6ef7; color: #ffffff;"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    返回首页
+                </a>
+                <button
+                    id="goBackBtn404"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg border border-gray-200 transition-all text-sm cursor-pointer"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m0 0v14"></path>
+                    </svg>
+                    返回上一页
+                </button>
+            </div>
+        </div>
+        <script>
+            document.getElementById("goBackBtn404")?.addEventListener("click", () => {
+                if (document.referrer) {
+                    window.history.back();
+                } else {
+                    window.location.href = "/";
+                }
+            });
+        </script>
+    </DocLayout>
+) : (
+    <DocLayout
+        title={title}
+        currentPath={currentPath}
+        lastModified={formatDate(lastModified)}
+    >
+        <div set:html={file.htmlContent} />
+    </DocLayout>
+)}

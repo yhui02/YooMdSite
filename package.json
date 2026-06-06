@@ -5,11 +5,15 @@
   "description": "通用应用系统设计文档阅读平台",
   "scripts": {
     "dev": "astro dev",
+    "dev:ssr": "RENDER_MODE=ssr astro dev",
     "start": "astro dev",
+    "start:ssr": "RENDER_MODE=ssr node dist/server/entry.mjs",
     "build": "astro build",
+    "build:ssr": "RENDER_MODE=ssr astro build",
     "preview": "astro preview"
   },
   "dependencies": {
+    "@astrojs/node": "^10.1.2",
     "@astrojs/tailwind": "^6.0.2",
     "astro": "^6.4.2",
     "highlight.js": "^11.11.1",
