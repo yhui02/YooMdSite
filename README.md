@@ -26,6 +26,7 @@ pnpm install
 
 # 启动开发服务器
 pnpm dev
+pnpm dev:ssr
 ```
 
 访问 http://localhost:4321/

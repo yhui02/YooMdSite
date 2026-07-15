@@ -31,6 +31,7 @@ export interface AppSettings {
   docsPaths: DocsPathEntry[];
   defaultDoc: string;
   presetDescriptions?: Record<string, string>; // 预置项目的自定义描述
+  ignoredDirectories?: string[]; // 文档树中忽略的目录名称列表
 }
 
 const DATA_DIR = resolve(process.cwd(), "data");
@@ -123,6 +124,7 @@ function getDefaultSettings(): AppSettings {
     siteName: staticConfig.siteName,
     docsPaths: allPaths,
     defaultDoc,
+    ignoredDirectories: [],
   };
 }
 
@@ -168,6 +170,7 @@ export function loadSettings(): AppSettings {
     docsPaths: allPaths,
     defaultDoc,
     presetDescriptions,
+    ignoredDirectories: saved.ignoredDirectories || [],
   };
 
   // 检查路径是否存在
@@ -189,6 +192,7 @@ export function saveSettings(settings: AppSettings): void {
     const toSave: AppSettings = {
       ...settings,
       docsPaths: settings.docsPaths.filter((p) => !p.preset),
+      ignoredDirectories: settings.ignoredDirectories || [],
     };
     writeFileSync(SETTINGS_FILE, JSON.stringify(toSave, null, 2), "utf-8");
   } catch (e) {
@@ -352,6 +356,33 @@ export function setPresetDescription(
   settings.presetDescriptions[name] = description;
   // 同步更新 docsPaths 中的描述（供当前返回使用）
   target.description = description;
+  saveSettings(settings);
+  return settings;
+}
+
+// 添加忽略目录名称
+export function addIgnoredDirectory(dirName: string): AppSettings {
+  const settings = loadSettings();
+  if (!settings.ignoredDirectories) {
+    settings.ignoredDirectories = [];
+  }
+  if (settings.ignoredDirectories.includes(dirName)) {
+    throw new Error(`"${dirName}" 已在忽略列表中`);
+  }
+  settings.ignoredDirectories.push(dirName);
+  saveSettings(settings);
+  return settings;
+}
+
+// 移除忽略目录名称
+export function removeIgnoredDirectory(dirName: string): AppSettings {
+  const settings = loadSettings();
+  if (!settings.ignoredDirectories) {
+    settings.ignoredDirectories = [];
+  }
+  settings.ignoredDirectories = settings.ignoredDirectories.filter(
+    (d) => d !== dirName,
+  );
   saveSettings(settings);
   return settings;
 }

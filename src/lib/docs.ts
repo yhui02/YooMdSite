@@ -1,4 +1,5 @@
 import { readdir, readFile, stat } from "fs/promises";
+import { existsSync } from "fs";
 import { join, relative, resolve, isAbsolute } from "path";
 import MarkdownIt from "markdown-it";
 import taskLists from "markdown-it-task-lists";
@@ -70,72 +71,111 @@ function resolveDocsPath(configPath: string): string {
   return resolve(projectRoot, "src", configPath);
 }
 
-// 渲染 Markdown 为 HTML
-function renderMarkdown(content: string): string {
-  return md.render(content);
+// 渲染 Markdown 为 HTML，并处理相对路径图片
+function renderMarkdown(
+  content: string,
+  fileDir?: string,
+  basePath?: string,
+): string {
+  let html = md.render(content);
+
+  // 处理相对路径图片
+  if (fileDir && basePath) {
+    html = html.replace(
+      /<img\s+([^>]*)src="([^"]+)"([^>]*)>/g,
+      (match, before, src, after) => {
+        // 跳过绝对路径 / 网络路径 / data: URI
+        if (
+          src.startsWith("/") ||
+          src.startsWith("http://") ||
+          src.startsWith("https://") ||
+          src.startsWith("data:") ||
+          src.startsWith("#")
+        ) {
+          return match;
+        }
+        // 移除路径中的查询参数和锚点后再解析
+        const cleanSrc = src.split(/[?#]/)[0];
+        const absolutePath = resolve(fileDir, cleanSrc);
+        // 检查文件是否真实存在
+        if (!existsSync(absolutePath)) {
+          return match;
+        }
+        const urlPath = relative(basePath, absolutePath);
+        const newSrc = `/api/static?path=${encodeURIComponent(urlPath)}`;
+        // 保留原始查询参数和锚点
+        const queryAndHash = src.substring(cleanSrc.length);
+        return `<img ${before}src="${newSrc}${queryAndHash}"${after}>`;
+      },
+    );
+  }
+
+  return html;
 }
 
 // 递归扫描目录构建树形结构
 async function buildDocTree(
   dir: string,
   basePath: string,
+  ignoredDirs: string[] = [],
 ): Promise<DocTreeNode[]> {
   const nodes: DocTreeNode[] = [];
 
   try {
     const entries = await readdir(dir);
 
-    // 分离文件和文件夹
-    const folders: string[] = [];
-    const files: string[] = [];
+    const items: { name: string; isDir: boolean }[] = [];
 
     for (const entry of entries) {
       const fullPath = join(dir, entry);
       const stats = await stat(fullPath);
       if (stats.isDirectory()) {
-        folders.push(entry);
+        items.push({ name: entry, isDir: true });
       } else if (entry.endsWith(".md")) {
-        files.push(entry);
+        items.push({ name: entry, isDir: false });
       }
     }
 
-    // 排序
-    folders.sort((a, b) => a.localeCompare(b, "zh"));
-    files.sort((a, b) => a.localeCompare(b, "zh"));
+    // 统一按名称排序
+    items.sort((a, b) => a.name.localeCompare(b.name, "zh"));
 
-    // 处理文件夹
-    for (const folder of folders) {
-      const fullPath = join(dir, folder);
-      const children = await buildDocTree(fullPath, basePath);
-      const relPath = relative(basePath, fullPath);
+    // 处理所有条目
+    for (const item of items) {
+      const fullPath = join(dir, item.name);
 
-      nodes.push({
-        name: folder,
-        path: relPath,
-        children,
-        isFile: false,
-        order: folder.split("-")[0] || folder,
-      });
-    }
+      if (item.isDir) {
+        if (ignoredDirs.includes(item.name)) continue;
+        const children = await buildDocTree(fullPath, basePath, ignoredDirs);
+        const relPath = relative(basePath, fullPath);
+        const displayName = item.name.replace(/^\d{1,2}-/, "");
 
-    // 处理文件
-    for (const file of files) {
-      const fullPath = join(dir, file);
-      const stats = await stat(fullPath);
-      const content = await readFile(fullPath, "utf-8");
-      const relPath = relative(basePath, fullPath);
-      const urlPath = relPath.replace(".md", "");
+        nodes.push({
+          name: displayName,
+          path: relPath,
+          children,
+          isFile: false,
+          order: item.name.split("-")[0] || item.name,
+        });
+      } else {
+        const stats = await stat(fullPath);
+        const content = await readFile(fullPath, "utf-8");
+        const relPath = relative(basePath, fullPath);
+        const urlPath = relPath.replace(".md", "");
 
-      nodes.push({
-        name: file.replace(".md", ""),
-        path: urlPath,
-        content,
-        htmlContent: renderMarkdown(content),
-        children: [],
-        isFile: true,
-        order: file.split("-")[0]?.replace(".md", "") || file,
-        lastModified: stats.mtime,
-      });
+        const fileName = item.name.replace(".md", "");
+        const displayName = fileName.replace(/^\d{1,2}-/, "");
+
+        nodes.push({
+          name: displayName,
+          path: urlPath,
+          content,
+          htmlContent: renderMarkdown(content, dir, basePath),
+          children: [],
+          isFile: true,
+          order: fileName,
+          lastModified: stats.mtime,
+        });
+      }
     }
   } catch (error) {
     console.error(`Error scanning directory: ${dir}`, error);
@@ -147,11 +187,15 @@ async function buildDocTree(
 // 获取文档树（自动适配 SSG/SSR 模式）
 export async function getDocTree(): Promise<DocTreeNode[]> {
   let configPath: string;
+  let ignoredDirs: string[] = [];
 
   if (isSSRMode()) {
     // SSR 模式：从运行时配置读取
+    const { loadSettings } = await import("./config-store");
+    const settings = loadSettings();
     const project = getActiveProject();
     configPath = project.path;
+    ignoredDirs = settings.ignoredDirectories || [];
   } else {
     // SSG 模式：从静态配置读取
     const project = getDefaultProject();
@@ -159,7 +203,7 @@ export async function getDocTree(): Promise<DocTreeNode[]> {
   }
 
   const docsPath = resolveDocsPath(configPath);
-  return buildDocTree(docsPath, docsPath);
+  return buildDocTree(docsPath, docsPath, ignoredDirs);
 }
 
 // SSR 模式：根据指定名称获取文档树
@@ -173,5 +217,6 @@ export async function getDocTreeByName(
     throw new Error(`文档路径 "${name}" 不存在`);
   }
   const docsPath = resolveDocsPath(project.path);
-  return buildDocTree(docsPath, docsPath);
+  const ignoredDirs = settings.ignoredDirectories || [];
+  return buildDocTree(docsPath, docsPath, ignoredDirs);
 }

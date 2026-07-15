@@ -1072,8 +1072,8 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
                 background: #fff;
                 border-radius: 12px;
                 width: 90%;
-                max-width: 520px;
-                max-height: 80vh;
+                max-width: 720px;
+                max-height: 85vh;
                 overflow-y: auto;
                 box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             }
@@ -1111,12 +1111,26 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
             .settings-path-item {
                 display: flex;
                 align-items: center;
-                gap: 12px;
-                padding: 12px;
+                gap: 8px;
+                padding: 10px;
                 border: 1px solid #e5e7eb;
                 border-radius: 8px;
-                margin-bottom: 8px;
                 transition: all 0.15s ease;
+                min-width: 0;
+            }
+            .settings-path-item:hover {
+                border-color: #a5b4fc;
+                box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+            }
+            .settings-path-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            @media (max-width: 600px) {
+                .settings-path-grid {
+                    grid-template-columns: 1fr;
+                }
             }
             .settings-path-item.is-default {
                 border-color: #a5b4fc;
@@ -1140,14 +1154,18 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
             .settings-path-info {
                 flex: 1;
                 min-width: 0;
+                overflow: hidden;
             }
             .settings-path-name {
-                font-size: 14px;
+                font-size: 13px;
                 font-weight: 500;
                 color: #111827;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
             .settings-path-dir {
-                font-size: 12px;
+                font-size: 11px;
                 color: #6b7280;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -1156,12 +1174,14 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
             }
             .settings-path-actions {
                 display: flex;
+                flex-wrap: wrap;
                 gap: 2px;
                 flex-shrink: 0;
+                justify-content: flex-end;
             }
             .settings-path-actions button {
-                padding: 4px 8px;
-                font-size: 12px;
+                padding: 3px 6px;
+                font-size: 11px;
                 border-radius: 4px;
                 border: none;
                 cursor: pointer;
@@ -1196,27 +1216,27 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
                 background: #ecfdf5;
             }
             .settings-badge {
-                font-size: 11px;
+                font-size: 10px;
                 background: #eef2ff;
                 color: #4f46e5;
-                padding: 1px 8px;
+                padding: 1px 6px;
                 border-radius: 9999px;
-                margin-left: 6px;
+                margin-left: 4px;
             }
             /* 默认文档标签 - 更醒目的样式 */
             .settings-badge-default {
-                font-size: 11px;
+                font-size: 10px;
                 background: linear-gradient(135deg, #4f46e5, #7c3aed);
                 color: #ffffff;
-                padding: 2px 10px;
+                padding: 1px 8px;
                 border-radius: 9999px;
-                margin-left: 6px;
+                margin-left: 4px;
                 font-weight: 600;
                 box-shadow: 0 1px 3px rgba(79, 70, 229, 0.3);
             }
             .settings-add-btn {
                 width: 100%;
-                padding: 10px;
+                padding: 10px 12px;
                 border: 2px dashed #d1d5db;
                 border-radius: 8px;
                 background: transparent;
@@ -1225,9 +1245,15 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
                 cursor: pointer;
                 transition: all 0.15s ease;
                 margin-top: 4px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
             }
             .settings-add-btn:hover {
-                border-color: #818cf8;
+                border-color: #a5b4fc;
+                border-style: solid;
+                background: #f5f3ff;
                 color: #4f46e5;
             }
             .settings-form {
@@ -1332,6 +1358,10 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
                 border-color: #374151;
                 background: #111827;
             }
+            html.dark .settings-path-item:hover {
+                border-color: #6366f1;
+                box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+            }
             html.dark .settings-path-item.is-default {
                 border-color: #4f46e5;
                 background: #312e81;
@@ -1371,7 +1401,9 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
                 color: #9ca3af;
             }
             html.dark .settings-add-btn:hover {
-                border-color: #818cf8;
+                border-color: #6366f1;
+                border-style: solid;
+                background: #1e1b4b;
                 color: #a5b4fc;
             }
             html.dark .settings-form {
@@ -1404,6 +1436,137 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
             html.dark .settings-ssr-notice code {
                 background: #78350f;
                 color: #fde68a;
+            }
+
+            /* 忽略目录设置样式 */
+            .settings-section-divider {
+                height: 1px;
+                background: #e5e7eb;
+                margin: 24px 0 12px;
+            }
+            .settings-section-title {
+                font-size: 14px;
+                font-weight: 600;
+                color: #111827;
+                margin-bottom: 10px;
+            }
+            .settings-ignored-desc {
+                font-size: 12px;
+                color: #6b7280;
+                margin-bottom: 10px;
+                line-height: 1.5;
+            }
+            .settings-ignored-list {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-bottom: 10px;
+                min-height: 32px;
+            }
+            .settings-ignored-item {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                padding: 4px 10px;
+                background: #eef2ff;
+                border: 1px solid #c7d2fe;
+                border-radius: 9999px;
+                font-size: 12px;
+                color: #4338ca;
+            }
+            .settings-ignored-item button {
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                border: none;
+                background: transparent;
+                color: #6366f1;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+                line-height: 1;
+                padding: 0;
+            }
+            .settings-ignored-item button:hover {
+                background: #c7d2fe;
+                color: #dc2626;
+            }
+            .settings-ignored-empty {
+                font-size: 12px;
+                color: #9ca3af;
+                line-height: 32px;
+            }
+            .settings-ignored-add-row {
+                display: flex;
+                gap: 8px;
+            }
+            .settings-ignored-add-row input {
+                flex: 1;
+                padding: 6px 10px;
+                border: 1px solid #d1d5db;
+                border-radius: 6px;
+                font-size: 13px;
+                outline: none;
+            }
+            .settings-ignored-add-row input:focus {
+                border-color: #818cf8;
+                box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2);
+            }
+            .settings-ignored-add-row button {
+                padding: 6px 14px;
+                font-size: 13px;
+                border-radius: 6px;
+                border: 1px solid #d1d5db;
+                cursor: pointer;
+                transition: all 0.15s ease;
+                white-space: nowrap;
+                font-weight: 500;
+            }
+
+            /* 暗色模式 - 忽略目录设置 */
+            html.dark .settings-section-divider {
+                background: #374151;
+            }
+            html.dark .settings-section-title {
+                color: #f3f4f6;
+            }
+            html.dark .settings-ignored-desc {
+                color: #9ca3af;
+            }
+            html.dark .settings-ignored-item {
+                background: #312e81;
+                border-color: #4f46e5;
+                color: #a5b4fc;
+            }
+            html.dark .settings-ignored-item button {
+                color: #a5b4fc;
+            }
+            html.dark .settings-ignored-item button:hover {
+                background: #4f46e5;
+                color: #fca5a5;
+            }
+            html.dark .settings-ignored-empty {
+                color: #6b7280;
+            }
+            html.dark .settings-ignored-add-row input {
+                background: #1f2937;
+                border-color: #4b5563;
+                color: #f3f4f6;
+            }
+            html.dark .settings-ignored-add-row input:focus {
+                border-color: #818cf8;
+                box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2);
+            }
+            html.dark .settings-ignored-add-row button {
+                background: #1f2937;
+                border-color: #4b5563;
+                color: #a5b4fc;
+            }
+            html.dark .settings-ignored-add-row button:hover {
+                background: #312e81;
+                border-color: #6366f1;
             }
         </style>
     </head>
@@ -1655,7 +1818,7 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
         <div class="settings-modal" id="settingsModal">
             <div class="settings-modal-content">
                 <div class="settings-modal-header">
-                    <h2>文档路径管理</h2>
+                    <h2>设置</h2>
                     <button class="settings-modal-close" id="settingsModalClose">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -2302,10 +2465,10 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
             }
 
             function renderSettings(settings) {
-                const { docsPaths, defaultDoc } = settings;
-                let html = docsPaths.map((p, i) => {
+                const { docsPaths, defaultDoc, ignoredDirectories } = settings;
+                const pathItemsHtml = docsPaths.map((p, i) => {
                     const isDefault = p.name === defaultDoc;
-                    const pathExists = p.exists !== false; // 默认 true（兼容旧数据）
+                    const pathExists = p.exists !== false;
                     const pathMissingClass = !pathExists ? "path-missing" : "";
                     const missingWarning = !pathExists ? '<span class="settings-badge" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;margin-left:6px;">路径不存在</span>' : "";
 
@@ -2335,8 +2498,29 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
                 `;
                 }).join("");
 
-                html += `<button class="settings-add-btn" id="settingsAddBtn">+ 添加文档路径</button>`;
+                let html = `<div class="settings-section-title">文档路径管理</div>`;
+                html += `<div class="settings-path-grid">${pathItemsHtml}</div>`;
+                html += `<button class="settings-add-btn" id="settingsAddBtn" style="margin-top:16px">+ 添加文档路径</button>`;
                 html += `<div id="settingsFormArea"></div>`;
+
+                // 忽略目录设置
+                const ignoredList = (ignoredDirectories || []).map((d) => `
+                    <span class="settings-ignored-item">
+                        <span>${d}</span>
+                        <button class="settings-ignored-remove" data-dir="${d}" title="移除">×</button>
+                    </span>
+                `).join("");
+                html += `
+                    <div class="settings-section-divider"></div>
+                    <div class="settings-section-title">忽略目录设置</div>
+                    <div class="settings-ignored-desc">设置后，文档树中将隐藏匹配名称的文件夹（影响所有文档路径）。</div>
+                    <div class="settings-ignored-list" id="ignoredDirList">${ignoredList || '<span class="settings-ignored-empty">暂无忽略目录</span>'}</div>
+                    <div class="settings-ignored-add-row">
+                        <input id="ignoredDirInput" placeholder="输入目录名称..." />
+                        <button class="settings-btn-default" id="ignoredDirAddBtn">添加</button>
+                    </div>
+                `;
+
                 settingsBody!.innerHTML = html;
 
                 // Bind events
@@ -2366,7 +2550,6 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
                                 await settingsApiDelete(name!);
                             }
                         } else if (action === "deletePreset") {
-                            // 预置路径删除需要输入名称确认
                             const confirmName = prompt(
                                 `⚠️ 删除预置文档将永久删除整个文件夹。\n\n请输入 "${name}" 确认删除：`,
                             );
@@ -2388,6 +2571,38 @@ function renderTreeNode(node: DocTreeNode, depth: number = 0): string {
                                 } catch (e) {
                                     alert((e as Error).message);
                                 }
+                            }
+                        }
+                    });
+                });
+
+                // 忽略目录按钮事件
+                document.getElementById("ignoredDirAddBtn")?.addEventListener("click", async () => {
+                    const input = document.getElementById("ignoredDirInput") as HTMLInputElement;
+                    const dirName = input.value.trim();
+                    if (!dirName) return;
+                    try {
+                        await settingsApiPost({ action: "addIgnoredDir", dirName });
+                        input.value = "";
+                    } catch (e) {
+                        alert((e as Error).message);
+                    }
+                });
+
+                document.getElementById("ignoredDirInput")?.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") {
+                        (document.getElementById("ignoredDirAddBtn") as HTMLButtonElement)?.click();
+                    }
+                });
+
+                document.querySelectorAll(".settings-ignored-remove").forEach((btn) => {
+                    btn.addEventListener("click", async () => {
+                        const dirName = (btn as HTMLElement).dataset.dir;
+                        if (confirm(`确定不再忽略 "${dirName}" 吗？`)) {
+                            try {
+                                await settingsApiPost({ action: "removeIgnoredDir", dirName });
+                            } catch (e) {
+                                alert((e as Error).message);
                             }
                         }
                     });

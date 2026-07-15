@@ -7,6 +7,8 @@ import {
   updateDocsPath,
   copyDocsToSystem,
   setPresetDescription,
+  addIgnoredDirectory,
+  removeIgnoredDirectory,
 } from "../../lib/config-store";
 
 // GET /api/settings - 获取所有配置
@@ -68,6 +70,20 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (action === "setPresetDesc") {
       const settings = setPresetDescription(body.name, body.description);
+      return new Response(JSON.stringify(settings), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "addIgnoredDir") {
+      const settings = addIgnoredDirectory(body.dirName);
+      return new Response(JSON.stringify(settings), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "removeIgnoredDir") {
+      const settings = removeIgnoredDirectory(body.dirName);
       return new Response(JSON.stringify(settings), {
         headers: { "Content-Type": "application/json" },
       });
